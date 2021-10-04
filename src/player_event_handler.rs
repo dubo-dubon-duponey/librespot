@@ -69,7 +69,7 @@ pub fn run_program_on_events(event: PlayerEvent, onevent: &str) -> Option<io::Re
     )
 }
 
-pub fn emit_sink_event(sink_status: SinkStatus, onevent: &str) -> io::Result<ExitStatus> {
+pub fn emit_sink_event(sink_status: SinkStatus, onevent: &str) -> Option<io::Result<AsyncChild>> {
     let mut env_vars = HashMap::new();
     env_vars.insert("PLAYER_EVENT", "sink".to_string());
     let sink_status = match sink_status {
@@ -81,9 +81,10 @@ pub fn emit_sink_event(sink_status: SinkStatus, onevent: &str) -> io::Result<Exi
     let mut v: Vec<&str> = onevent.split_whitespace().collect();
     info!("Running {:?} with environment variables {:?}", v, env_vars);
 
-    Command::new(&v.remove(0))
-        .args(&v)
-        .envs(env_vars.iter())
-        .spawn()?
-        .wait()
+    Some(
+        AsyncCommand::new(&v.remove(0))
+            .args(&v)
+            .envs(env_vars.iter())
+            .spawn(),
+    )
 }
